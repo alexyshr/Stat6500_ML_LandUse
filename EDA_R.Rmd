@@ -1,0 +1,42 @@
+---
+output: pdf_document
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{lastpage}
+- \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2)
+library(GGally)
+library(dplyr)
+library(glmnet)
+```
+
+\fancyfoot[C]{\thepage\ of \pageref{LastPage}}
+\newpage
+\begin{titlepage}
+\begin{center}
+\vspace*{1cm}
+\large{STAT 6500}\\
+\vspace*{2cm}
+\line(1,0){400}\\
+\huge{\textbf{Statistical Machine Learning}}\\
+\vspace*{1cm}
+Land Use Cover - EDA\\
+\vspace*{1cm}
+\normalsize{\textbf{Kendall Byrd - Atitarn Dechasuravanit - Alexys Rodriguez}}\\
+\line(1,0){400}
+\vfill
+\huge{Spring 2022}\\
+Wednesday, March 2
+\end{center}
+\end{titlepage}
+
+
+
+```{r}
+
+```
+
