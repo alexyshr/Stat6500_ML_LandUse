@@ -4,6 +4,7 @@ header-includes:
 - \usepackage{fancyhdr}
 - \usepackage{lastpage}
 - \usepackage{amsmath}
+- \usepackage{tocloft}
 ---
 
 ```{r setup, include=FALSE}
@@ -14,6 +15,7 @@ library(dplyr)
 ```
 
 \fancyfoot[C]{\thepage\ of \pageref{LastPage}}
+
 \newpage
 \begin{titlepage}
 \begin{center}
@@ -25,7 +27,7 @@ library(dplyr)
 \vspace*{1cm}
 Land Use Cover - EDA\\
 \vspace*{1cm}
-\normalsize{\textbf{Kendall Byrd - Atitarn Dechasuravanit - Alexys Rodriguez}}\\
+\normalsize{\textbf{Kendall Byrd - Atitarn Dechasuravanit - Alexys Rodriguez - Abdulaziz Alsugair}}\\
 \line(1,0){400}
 \vfill
 \huge{Spring 2022}\\
@@ -33,26 +35,47 @@ Wednesday, March 2
 \end{center}
 \end{titlepage}
 
-kjhasd hfkj ahskjd hfkjahs dkjfh kjasdhkjf haskjdfkjas hfdkjhsa kjdfh kjsad hfkjsab qwrqwerwqer wqer ewqrq werqwerwqerwqerqwerqwerqwerqwerq werwqerqwe rewqr
 
-asdfakjsdhfkjahskjdf hkjsadh fkjhsadkjfh kjdsah fkjhdsa kjfh kjdsahf kjsahd kjfh dsakfh 
+\newpage
+\tableofcontents
+ 
 
-ahskjdfh asdkj hfkjsadh fkjdsa
+\newpage
+\pagestyle{fancy}
+\fancyhead[L]{\slshape Land Use Cover}
+\fancyhead[C]{\slshape STAT 6500}
+\fancyhead[R]{\slshape EDA}
 
-```{r}
+# Introduction
 
-```
-
-
-```{r}
-
-```
+Dataset information for this project is obtained from UCI Machine Learning repository. The data includes training and testing data for classifying a high resolution aerial image into 9 types of urban land cover which are trees, grass, soil, concrete, asphalt, buildings, cars, pools, shadows. Features such as Multi-scale spectral, size, shape, and texture information are used for classification. There are a low number of training samples for each class (14-30) and a high number of classification variables or features (148 features in total). The testing data set is from a random sampling of the image. As the dataset contains a large number of features, it might be interesting to see their correlations between each pair of these variables in order to filter out some of them that have high correlation and use the remaining feature for prediction.
 
 
-```{r}
+# Details of Attributes
 
-```
-
+- Class : Land cover class (nominal)\
+- BrdIndx : Border Index (shape variable)\
+- Area : Area in m2 (size variable)\
+- Round : Roundness (shape variable)\
+- Bright : Brightness (spectral variable)\
+- Compact : Compactness (shape variable)\
+- ShpIndx : Shape Index (shape variable)\
+- Mean_G : Green (spectral variable)\
+- Mean_R : Red (spectral variable)\
+- Mean_NIR : Near Infrared (spectral variable)\
+- SD_G : Standard deviation of Green (texture variable)\
+- SD_R : Standard deviation of Red (texture variable)\
+- SD_NIR : Standard deviation of Near Infrared (texture variable)\
+- LW : Length/Width (shape variable)\
+- GLCM1 : Gray-Level Co-occurrence Matrix (texture variable)\
+- Rect : Rectangularity (shape variable)\
+- GLCM2 : Another Gray-Level Co-occurrence Matrix attribute (texture variable)\
+- Dens : Density (shape variable)\
+- Assym : Assymetry (shape variable)\
+- NDVI : Normalized Difference Vegetation Index (spectral variable)\
+- BordLngth: Border Length (shape variable)\
+- GLCM3 : Another Gray-Level Co-occurrence Matrix attribute (texture variable)\
+- Note: These variables repeat for each coarser scale (i.e. variable_40, variable_60, ...variable_140).
 
 
 ```{python include=FALSE}
@@ -71,6 +94,8 @@ import plotly.graph_objs as go
 import plotly.figure_factory as ff
 ```
 
+# Loading Data
+
 
 ```{python}
 #load in training and test data
@@ -80,23 +105,21 @@ print("Rows and Columns(Train): ",train.shape)
 print("Rows and Columns(Test) : ",test.shape)
 ```
 
+# Removing data with missing value
+
 ```{python}
 # check for missing values although it is clear there are none
 train.isnull().any().any()
 ```
 
-```{python}
-
-```
-
-
 
 
 ```{python}
-# duplicate function of pandas returns a duplicate row as true and others as false
+# duplicated function of pandas returns a duplicate row as true and others as false
 sum(train.duplicated())
 ```
 
+# Basic Statistics
 
 ```{python}
 # basic statistical details
@@ -137,6 +160,7 @@ axes[1].set_title('Visual for Distribution of Different Classes')
 plt.show()
 ```
 
+# Outlier examination
 
 ```{python}
 # Lets take a look at any outliers that could be potential issues
@@ -162,6 +186,8 @@ len(outliers_to_remove)
 #outliers_to_remove
 #train.loc[outliers_to_remove]
 ```
+
+# Distribution of Mean values
 
 
 ```{python}
@@ -193,6 +219,7 @@ plt.legend()
 plt.show()
 ```
 
+# Attributes Correlation
 
 ```{python}
 # lets examine correlations between features
@@ -208,8 +235,8 @@ train['class'].unique()
 ```{python}
 # now lets look at the correlation between a few variables
 sns.pairplot(train, vars=['class', 'BrdIndx','Area','Round','Bright','Compact'], 
-             hue='class', palette='deep', plot_kws={"s": 3})
-plt.show()
+             hue='class', palette='deep', plot_kws={"s": 4})
+#plt.show()
 ```
 
 
@@ -223,24 +250,96 @@ features_to_be_removed = set(list(correlations['level_1']))
 correlations.shape
 ```
 
-```{python}
+
+```{r include=FALSE}
+library(corrplot)
+#Load and view Training data
+trainData <- read.csv("training.csv")
+summary(trainData)
+# convert class from "char" into a factor
+trainData$class <- as.factor(trainData$class)
+```
+
+```{r}
+# A first start would be to investigate each coarseness level
+#create a list of dataframes
+trainingList <- list()
+
+#create new data-frame for each coarseness level
+
+for( i in 1:7){
+  #set the name to data + coarseness value
+  name<- paste("data", i*20, sep = "")
+  #first column index of the selected coarseness
+  begin = (i-1)*21+2
+  #last column index
+  ending = begin+20
+  #assign the first column and the columns between first and last
+  assign(name, trainData[,c(1,begin:ending)])
+  # add to the list
+  trainingList[[i]] <- trainData[,c(1,begin:ending)]
+}
+```
+
+
+```{r}
+# check collinearity among repeated variables
+
+corList <- list()
+#looping through all repeated variables
+for(i in 2:22){
+  #creating a dataframe with coarseness 20, and attribute i
+  df <- trainingList[[1]][,i]
+  for(j in 2:7){
+    #adding the same attribute from a different coarseness level
+    df <- cbind(df,trainingList[[j]][,i] )
+    colnames(df)[j]<- paste(j*20)
+  }
+  colnames(df)[1]<- "20"
+  #adding a correlation matrix to the list
+  corList[[i]] <-  cor(df)
+  #plotting 21 correlation matrices
+  corrplot.mixed(corList[[i]], upper = 'circle', lower = 'number', title = 
+                   colnames(data20[i]), mar=c(0,0,1,0))
+}
+
+
+```
+
+From the correlation plots:
+1. In all coarseness cases, 120 and 140 are very highly correlated
+2. across all attributes, correlation among consecutive coarseness level is highly correlated
+3. Bright, Mean_G, Mean_R, Mean_NIR, and NVDI are extremely correlated across all coarseness levels
+
+**Hypothesis**: perhaps modelling the data using a single coarseness level is sufficient or using coarseness levels 20 and 140 as they are they least correlated
+
+
+```{r}
+# checking the correlation among different attributes within the same coarseness
+
+
+corList2 <- list()
+for(i in 1:7){
+  corList2[[i]] <- cor(trainingList[[i]][,2:22])
+  corrplot.mixed(corList2[[i]],addCoef.col = 'black', number.cex = 0.4, upper = 'circle', 
+                 tl.cex=0.5, lower = 'number', title = paste("Coarseness Level", 
+                                                           i*20, sep=" "), mar=c(0,0,1,0),
+                 cl.cex = 0.5, diag = "n", tl.pos = "lt")
+}
 
 ```
 
 
-```{python}
+Analysis:
+1. brdindx and shpindx are highly correlated across all coarseness levels
+2. bright is highly correlated with mean_G, mean_R, and mean_NIR
+3. SD_G, SD_R, SD_NIR are highly correlated among each other
+4. rect is inversely correlated with shpindx, compact, round, and brdindx
 
-```
+# Conclusions
 
-
-```{python}
-
-```
-
-
-```{python}
-
-```
-
-
+1. classification can be attempted with only one coarsensss level, or levels 20 and 140
+2. Brdindx, Shpindx, compact, and round can be omitted from the model since rect is highly correlated with all of them
+3. Mean_G, Mean_R, and Mean_NIR can be omitted from the model since bright is highly correlated with all of them
+4. SD_G, SD_R, or SD_NIR should be used in the model; whichever produces the best results
 
