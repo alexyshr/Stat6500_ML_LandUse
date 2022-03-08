@@ -8,10 +8,9 @@ header-includes:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(ISLR2)
+library(reticulate)
 library(GGally)
 library(dplyr)
-library(glmnet)
 ```
 
 \fancyfoot[C]{\thepage\ of \pageref{LastPage}}
@@ -34,9 +33,214 @@ Wednesday, March 2
 \end{center}
 \end{titlepage}
 
+kjhasd hfkj ahskjd hfkjahs dkjfh kjasdhkjf haskjdfkjas hfdkjhsa kjdfh kjsad hfkjsab qwrqwerwqer wqer ewqrq werqwerwqerwqerqwerqwerqwerqwerq werwqerqwe rewqr
+
+asdfakjsdhfkjahskjdf hkjsadh fkjhsadkjfh kjdsah fkjhdsa kjfh kjdsahf kjsahd kjfh dsakfh 
+
+ahskjdfh asdkj hfkjsadh fkjdsa
+
+```{r}
+
+```
 
 
 ```{r}
 
 ```
+
+
+```{r}
+
+```
+
+
+
+```{python include=FALSE}
+import numpy as np
+import pandas as pd
+import seaborn as sns
+sns.set_style('whitegrid')
+import matplotlib.pyplot as plt
+import os
+import time
+from plotly import tools
+from plotly.offline import plot
+import plotly.offline as py
+from plotly.graph_objs import Scatter, Layout
+import plotly.graph_objs as go
+import plotly.figure_factory as ff
+```
+
+
+```{python}
+#load in training and test data
+train = pd.read_csv('training.csv')
+test = pd.read_csv('testing.csv')
+print("Rows and Columns(Train): ",train.shape)
+print("Rows and Columns(Test) : ",test.shape)
+```
+
+```{python}
+# check for missing values although it is clear there are none
+train.isnull().any().any()
+```
+
+```{python}
+
+```
+
+
+
+
+```{python}
+# duplicate function of pandas returns a duplicate row as true and others as false
+sum(train.duplicated())
+```
+
+
+```{python}
+# basic statistical details
+fig = train.describe().T
+fig = fig.round(5)  # round to 5 decimal places
+table = go.Table(
+    columnwidth=[0.8]+[0.5]*8,
+    header=dict(
+        values=['Attribute'] + list(fig.columns),
+        line = dict(color='darkslategray'),
+        fill = dict(color='royalblue'),
+    ),
+    cells=dict(
+        values=[fig.index] + [fig[k].tolist() for k in fig.columns[:]],
+        line = dict(color='darkslategray'),
+        fill = dict(color=['paleturquoise', 'white'])
+    )
+)
+plot([table], filename='table-of-data.html')
+```
+
+
+```{python}
+# more general data exploration
+print(train['class'].value_counts())
+```
+
+
+```{python}
+f,axes=plt.subplots(1,2,figsize=(20,8))
+train['class'].value_counts().plot.pie(autopct='%1.1f%%',ax=axes[0])
+axes[0].set_title('Visual for Distribution of Different Classes')
+axes[0].set_ylabel('')
+sns.countplot('class',data=train,ax=axes[1]) # sns.countplot is used 
+                                             # like a histogram but for 
+                                             # categorical data
+axes[1].set_title('Visual for Distribution of Different Classes')
+plt.show()
+```
+
+
+```{python}
+# Lets take a look at any outliers that could be potential issues
+from collections import Counter
+def examine_outliers(train_data, n, features):
+  outlier_indicator = []
+  for out in features:
+    Q1 = np.percentile(train_data[out], 25)
+    Q3 = np.percentile(train_data[out], 75)
+    IQR = Q3 - Q1
+    outlier_step = 1.5 * IQR # IQR method of dealing with outliers, 1 of 2 methods
+    outlier_list_out = train_data[
+            (train_data[out] < Q1 - outlier_step) | (train_data[out] > Q3 + 
+            outlier_step)].index
+    outlier_indicator.extend(outlier_list_out)
+    outlier_indices = Counter(outlier_indicator)
+    multiple_outliers = list(k for k, j in outlier_indices.items() if j > n)
+    return multiple_outliers
+# find outliers that should be removed
+list_atributes = train.drop('class', axis=1).columns
+outliers_to_remove = examine_outliers(train, 2, list_atributes)
+len(outliers_to_remove)
+#outliers_to_remove
+#train.loc[outliers_to_remove]
+```
+
+
+```{python}
+# lets look at mean values per row and column for train test data
+# mean for rows
+plt.figure(figsize=(10,5))
+features = train.columns.values[1:148]
+plt.title("The Distribution of Mean Values Per Row for Train and Test Sets", 
+          fontsize=10)
+sns.distplot(train[features].mean(axis=1),color="purple", kde=True,bins=50, 
+            label='train') # kde is kernel density estimation
+sns.distplot(test[features].mean(axis=1),color="green", kde=True,bins=50, 
+            label='test')
+plt.legend()
+plt.show()
+```
+
+
+```{python}
+# mean for columns
+plt.figure(figsize=(16,6))
+plt.title("The Distribution of Mean Values Per Column for Train and Test Sets",
+         fontsize=10)
+sns.distplot(train[features].mean(axis=0),color="red",kde=True,bins=50, 
+             label='train')
+sns.distplot(test[features].mean(axis=0),color="blue", kde=True,bins=50, 
+            label='test')
+plt.legend()
+plt.show()
+```
+
+
+```{python}
+# lets examine correlations between features
+# first the categorical variable 'class' needs to be changed to numerical variable so...
+group_map = {"grass ":0,"building ":1,'concrete ':2,'tree ':3,'shadow ':4,'pool ':5,
+             'asphalt ':6,'soil ':7,'car ':8}
+train['class'] = train['class'].map(group_map)
+test['class'] = test['class'].map(group_map)
+train['class'].unique()
+```
+
+
+```{python}
+# now lets look at the correlation between a few variables
+sns.pairplot(train, vars=['class', 'BrdIndx','Area','Round','Bright','Compact'], 
+             hue='class', palette='deep', plot_kws={"s": 3})
+plt.show()
+```
+
+
+```{python}
+# correlation of features with target
+corr = train.corr().abs().unstack().sort_values(kind="quicksort").reset_index()
+corr = corr[corr['level_0'] != corr['level_1']]
+corr.head()
+correlations = corr.loc[corr[0] == 1]
+features_to_be_removed = set(list(correlations['level_1']))
+correlations.shape
+```
+
+```{python}
+
+```
+
+
+```{python}
+
+```
+
+
+```{python}
+
+```
+
+
+```{python}
+
+```
+
+
 
