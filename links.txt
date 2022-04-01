@@ -1,0 +1,9 @@
+@urbanlandcover
+https://archive.ics.uci.edu/ml/datasets/Urban+Land+Cover#
+
+
+@Johnson2012
+https://www.tandfonline.com/doi/full/10.1080/2150704X.2012.705440
+
+@Johnson2013
+https://www.sciencedirect.com/science/article/pii/S0924271613001366
