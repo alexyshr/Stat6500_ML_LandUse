@@ -91,20 +91,54 @@ Wednesday, March 2
 It is often stated that currently the world is in the era of ‘Big Data’. This is because there is an overwhelming amount of data generated everyday by both single individuals and large corporations. For example, there are 277,000 tweets per minute, 2 million queries are searched on Google every minute, 72 hours of video are uploaded to YouTube every minute, 100 million emails are sent, and more than 570 websites are created every minute @Gaurav2018. The massive amounts of data being generated everyday provide an ocean of information explaining individuals’ habits, corporation logistics, global trends, and much more. Naturally, many individuals and corporations wanted methods to analyze and handle these large amounts of unorthodox data. This desire led to new discoveries in statistics and paved the way for a technique referred to as statistical machine learning or simply, machine learning. 	
 
 
-Machine learning is the study of computer algorithms that can improve or ‘learn’ automatically by using information from past experiences and using data. Thanks to advancements in computational power, large datasets can be analyzed, and important information extracted. This can provide powerful insight for many areas of research. In fact, machine learning techniques can allow individuals to predict the outcome of events before they happen. Some applications of machine learning are autonomous vehicles, voice recognition, 3-D modeling, and image information extraction. For this study, we propose implementing machine learning techniques on satellite imagery to determine the effect scale has on accurately classifying features extracted from the images. The dataset that will be analyzed in this project is the Urban Land Cover Data Set. This data can be found in the UCI Machine Learning Repository and was originally sourced by Brian Johnson, who is a Research Manager at the Institute for Global Environmental Strategies.
+Machine learning is the study of computer algorithms that can improve or ‘learn’ automatically by using information from past experiences and using data. Thanks to advancements in computational power, large datasets can be analyzed, and important information extracted. This can provide powerful insight for many areas of research. In fact, machine learning techniques can allow individuals to predict the outcome of events before they happen. Some applications of machine learning are autonomous vehicles, voice recognition, 3-D modeling, and image information extraction. For this study, we propose implementing machine learning techniques on satellite imagery to determine the effect scale has on accurately classifying features extracted from the images. The dataset that will be analyzed in this project is the Urban Land Cover Data Set, see @@urbanlandcover. This data can be found in the UCI Machine Learning Repository and was originally sourced by Brian Johnson, who is a Research Manager at the Institute for Global Environmental Strategies. Main studies originally related to the dataset are @Johnson2012 and @Johnson2012.
 
+
+## Data Description
 
 The Urban Land Cover Data Set is a multivariate data set with dimensions of 168 rows and 148 columns. It has twenty-two attributes, that are repeated for seven different coarser scales. This data set contains training and testing data for classifying a high-resolution aerial image into nine classes (target classification variable) of urban land cover.  The nine land cover classes are concrete, trees, soil, grass, buildings, cars, asphalt, pools, and shadows. There are a low number of training samples for each class (14-30) and a high number of classification variables (148), so testing different feature selection methods will be interesting. The testing data set was generated from random sampling of the image. All attribute abbreviations and brief explanations can be seen in the Table \@ref(tab:table1).
 
 
 ```{r table1, echo=FALSE}
-df = read.csv("./data/variable_description.csv")
-knitr::kable(df, caption = "Variables Description") %>%
+df = read.csv("./data/variable_description.csv", header=FALSE)
+knitr::kable(df, caption = "Variables Description",
+             col.names = c("Variables", 
+                           "Variables")) %>%
       column_spec(1,width = "2in") %>%
       column_spec(2,width = "3.8in") %>%
 kable_styling(font_size = 8, latex_options="hold_position")
 ```
 
+
+Table \@ref(tab:cs) describes the features set for different coarser scales.
+
+
+```{r cs, echo=FALSE}
+df = read.csv("./data/feature_sets.csv")
+knitr::kable(df, caption = "Feature Sets by Scales", 
+             col.names = c("Feature Set", "Scale", 
+                           "Number of Variables", "Variables Names",
+                           "Variables Suffix")) %>%
+      #column_spec(1,width = "2in") %>%
+      #column_spec(2,width = "3.8in") %>%
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+
+
+## Project Objectives
+
+The practical end-goal is:
+
+1. To reduce the cost of the photogrammetric data collection process by selecting a single coarseness level (resolution) that produces most accurate prediction, and
+
+2. To optimize object identification by selecting the best classification method
+
+# Problem statement
+
+Based on the study from @urbanlandcover, urban land-cover information is essential for numerous urban-planning applications, for instance, green space analysis (@inbook) and urban land-use mapping (@article). Most land cover has traditionally been obtained from satellite images using pixel-based image classification techniques. Nevertheless, in fine spatial resolution images with spectral variability within the same class can lead to low accuracy for classification using pixel-based image classification techniques. Therefore, @urbanlandcover presented the Object-based classification methods involving segmentation of the image on different scales. The average size of the segment will vary depending on the specified scale parameter. These scales were ranging from 40 to 140 with 20 intervals in this study. For each image segment, features such as spectral (mean values and variance for each band), mean normalized differential vegetation index (NDVI), area, shape, texture, length and so on were calculated in one of different scales (21 features for each scale). Target type for classification includes tree, grass, buildings, concrete, asphalt, vehicles, pools, soil and shadow.  
+
+This project aims to use the machine learning techniques and statistical tools which are different than the techniques used from the study of @urbanlandcover to predict the target class of the object derived from segmentation at different scales of high-resolution urban-land cover image. Three machine learning techniques which are neural networks, random forest and k-nearest neighbors will be used for this project. The comparison of different classifier for each scale and how well the classifier can perform at each scale will be analyzed. In total, 21 machine learning models will be implemented in this study (seven scales with three machine learning techniques for each scale) 
 
 # EDA
 
@@ -315,6 +349,31 @@ colnames(trainData)[107:127]
 ```{r include=FALSE}
 colnames(trainData)[128:148]
 ```
+
+# Methodology
+
+Given mentioned objectives, the project team opted to perform concurrent analyses on the data where all proposed classification methods are used to classify objects across all coarseness levels; The combination of resolution and classification method that produces the most accurate predictions on the testing data will be selected as the one that meets the objectives.
+
+
+## Available resolutions and variables
+
+The data was already collected and presented at 7 coarseness levels, each having 21 variable. The data will be processing will include: eliminating highly correlated variables resulting in 12 independent variables; and nominalizing all values to be used in the Neural Networks model.
+
+## Classification methods
+
+The team will be attempting 3 different classification methods:
+
+### Neural Networks
+
+A supervised feed-forward neural networks model will be trained using the training data (168 points); and consists of 12 nodes in the input layer and 9 nodes in the output layer representing the available variables and the object classes. The team will attempt to optimize the models by varying the number of hidden layers, their nodes, and testing multiple activation functions. The resultant models will be used to predict the the testing to estimate each model's accuracy. For a overview, frameworks and challenges of Neural Networks see @Prieto2016.
+
+### Random Forest
+
+The random forest decision tree model is less computationally expensive to train and to implement, thus, serving the objective of reducing data collection and classification cost. The decision tree model is created by recursively branching the data using the variable that adds most to the prediction of model; from that branch further branching is made using the best variable (the same variable may be used again). The recursion process stops when no further branching adds to the prediction value (e.g. when when splitting the data results in 50/50 odds). The random forest creates multiple decision trees, each with different and random branching, regardless of the predictive power. The prediction the one which the majority of the trees selects. More information applications of random forest classifier in remote sensors can be found in @Belgiu2016.
+
+### K-Nearest Neighbor
+
+The simplest of models, where the class of an input is determined by its neighboring pints. The euclidean distance is used to determine the distance from other data points; and the class of the input point is predicted to be the same is the majority of its neighbors. The number of nearest neighbors can tuned to produce accurate predictions. See @Taunk2019 for a clear review of this classifier for learning and classification purposes.
 
 
 # References
