@@ -1,0 +1,322 @@
+---
+output: 
+  bookdown::pdf_document2:
+    toc: False
+    extra_dependencies: ["float"]
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{lastpage}
+- \usepackage{amsmath}
+- \usepackage{tocloft}
+- \usepackage{placeins}
+- \usepackage{float}
+bibliography: ref.bib
+link-citations: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+#knitr::opts_chunk$set(fig.pos = "!H", out.extra = "")
+library(reticulate)
+library(GGally)
+library(dplyr)
+library(bookdown)
+library(GGally)
+library(corrplot)
+library(knitr)
+library(kableExtra)
+```
+
+
+```{python include=FALSE}
+import numpy as np
+import pandas as pd
+import seaborn as sns
+sns.set_style('whitegrid')
+import matplotlib.pyplot as plt
+import os
+import time
+from plotly import tools
+from plotly.offline import plot
+import plotly.offline as py
+from plotly.graph_objs import Scatter, Layout
+import plotly.graph_objs as go
+import plotly.figure_factory as ff
+```
+
+
+\fancyfoot[C]{\thepage\ of \pageref{LastPage}}
+
+\newpage
+\begin{titlepage}
+\begin{center}
+\vspace*{1cm}
+\large{STAT 6500}\\
+\vspace*{2cm}
+\line(1,0){400}\\
+\huge{\textbf{Statistical Machine Learning}}\\
+\vspace*{1cm}
+Land Use Cover\\
+\vspace*{1cm}
+\normalsize{\textbf{Kendall Byrd - Atitarn Dechasuravanit - Alexys Rodriguez - Abdulaziz Alsugair}}\\
+
+\vspace*{1cm}
+\normalsize{Project Proposal}\\
+
+\line(1,0){400}
+\vfill
+\huge{Spring 2022}\\
+Wednesday, March 2
+\end{center}
+\end{titlepage}
+
+
+\newpage
+\tableofcontents
+ 
+
+\newpage
+\pagestyle{fancy}
+\fancyhead[L]{\slshape Land Use Cover}
+\fancyhead[C]{\slshape STAT 6500}
+\fancyhead[R]{\slshape Project Proposal}
+
+# Introduction
+
+It is often stated that currently the world is in the era of ‘Big Data’. This is because there is an overwhelming amount of data generated everyday by both single individuals and large corporations. For example, there are 277,000 tweets per minute, 2 million queries are searched on Google every minute, 72 hours of video are uploaded to YouTube every minute, 100 million emails are sent, and more than 570 websites are created every minute @Gaurav2018. The massive amounts of data being generated everyday provide an ocean of information explaining individuals’ habits, corporation logistics, global trends, and much more. Naturally, many individuals and corporations wanted methods to analyze and handle these large amounts of unorthodox data. This desire led to new discoveries in statistics and paved the way for a technique referred to as statistical machine learning or simply, machine learning. 	
+
+
+Machine learning is the study of computer algorithms that can improve or ‘learn’ automatically by using information from past experiences and using data. Thanks to advancements in computational power, large datasets can be analyzed, and important information extracted. This can provide powerful insight for many areas of research. In fact, machine learning techniques can allow individuals to predict the outcome of events before they happen. Some applications of machine learning are autonomous vehicles, voice recognition, 3-D modeling, and image information extraction. For this study, we propose implementing machine learning techniques on satellite imagery to determine the effect scale has on accurately classifying features extracted from the images. The dataset that will be analyzed in this project is the Urban Land Cover Data Set. This data can be found in the UCI Machine Learning Repository and was originally sourced by Brian Johnson, who is a Research Manager at the Institute for Global Environmental Strategies.
+
+
+The Urban Land Cover Data Set is a multivariate data set with dimensions of 168 rows and 148 columns. It has twenty-two attributes, that are repeated for seven different coarser scales. This data set contains training and testing data for classifying a high-resolution aerial image into nine classes (target classification variable) of urban land cover.  The nine land cover classes are concrete, trees, soil, grass, buildings, cars, asphalt, pools, and shadows. There are a low number of training samples for each class (14-30) and a high number of classification variables (148), so testing different feature selection methods will be interesting. The testing data set was generated from random sampling of the image. All attribute abbreviations and brief explanations can be seen in the Table \@ref(tab:table1).
+
+
+```{r table1, echo=FALSE}
+df = read.csv("./data/variable_description.csv")
+knitr::kable(df, caption = "Variables Description") %>%
+      column_spec(1,width = "2in") %>%
+      column_spec(2,width = "3.8in") %>%
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+
+# EDA
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Load and view Training data
+trainData <- read.csv("training.csv")
+trainClass = table(trainData$class)
+
+#Load and view Test data
+testData = read.csv('testing.csv')
+testClass = table(testData$class)
+
+Class = rbind(trainClass, testClass)
+
+# convert class from "char" into a factor
+trainData$class <- as.factor(trainData$class)
+
+# convert class from "char" into a factor
+testData$class <- as.factor(testData$class)
+
+```
+
+
+From the source @urbanlandcover the dataset is divided into training (168 instances) and testing (507 instances). The number of attributes for both datasets is 148. The first attribute is `class` which contains the target (y) variable and is detailed (training and testing) in Table \@ref(tab:class) for training data.
+
+
+
+```{r class, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::kable(Class, caption = "Target Attribute 'class'") %>%
+kable_styling(font_size = 8, latex_options="hold_position") 
+```
+
+
+```{python class2, eval=FALSE, fig.align="center", fig.cap="Attribute 'class' in training", fig.height=2.5, fig.width=5, message=FALSE, warning=FALSE, include=FALSE}
+#load in training and test data
+train = pd.read_csv('training.csv')
+
+# check for missing values although it is clear there are none
+#train.isnull().any().any()
+
+# duplicated function of pandas returns a duplicate row as true and others as false
+#sum(train.duplicated())
+f,axes=plt.subplots(1,2,figsize=(20,8))
+train['class'].value_counts().plot.pie(autopct='%1.1f%%',ax=axes[0])
+axes[0].set_title('Visual for Distribution of Different Classes')
+axes[0].set_ylabel('')
+sns.countplot('class',data=train,ax=axes[1]) # sns.countplot is used
+# like a histogram but for
+# categorical data
+axes[1].set_title('Visual for Distribution of Different Classes')
+plt.show()
+```
+
+The same group of variables is repeated for different image segmentation scales (40, 60, ...), the Table \@ref(tab:descstat) shows a summary of the descriptive statistics for the original feature set applied to the images without any scaling. In addition, scatter-plots, box-plots and correlations values is displayed in Figure \@ref(fig:descgraph1).
+
+As the main purpose of this study is to analyze the effect of the scale in the prediction, the Figures \@ref(fig:multicol1) and \@ref(fig:multicol2) show detailed comparison of feature correlation inter and between different scales.
+
+
+
+```{r descstat, echo=FALSE}
+descr = sjmisc::descr(trainData[2:22], show=c("mean", "sd", "se", "md", "range", "iqr", "skew"))
+library(dplyr)
+descr = descr %>% 
+ mutate(across(is.numeric, round, digits=2))
+knitr::kable(descr, caption = "Descriptive Statistics") %>%
+kable_styling(font_size = 8, latex_options="hold_position") 
+```
+
+```{r fig.align="center", fig.cap="Desciptive graphics for main set of features (not scaling)", fig.height=4.5, fig.width=7, message=FALSE, warning=FALSE, , echo=FALSE}
+# Scatter-plot of Salary against first 6 predictors
+ggpairs(trainData[1:8], ggplot2::aes(colour=class), axisLabels = c("none"),
+        upper = list(continuous = wrap(ggally_cor, alpha = 0.5, size=1), 
+                     combo = wrap("box_no_facet", size=0.1, outlier.size=0.1)),
+        lower = list(continuous = wrap("points", alpha = 0.3, size=0.1), 
+        combo = wrap("dot", alpha = 0.4, size=0.1))) + 
+theme(text= element_text(size = 8)) 
+```
+
+ 
+```{r descgraph2, eval=FALSE, fig.align="center", fig.cap="Desciptive graphics for main set of features (not scaling) - 2", fig.height=4, fig.width=6, message=FALSE, warning=FALSE, include=FALSE}
+# Scatter-plot of Salary against first 6 predictors
+ggpairs(trainData[c(1,9:15)], ggplot2::aes(colour=class), axisLabels = c("none"),
+        upper = list(continuous = wrap(ggally_cor, alpha = 0.5, size=1), 
+                     combo = wrap("box_no_facet", size=0.1, outlier.size=0.1)),
+        lower = list(continuous = wrap("points", alpha = 0.3, size=0.1), 
+        combo = wrap("dot", alpha = 0.4, size=0.1))) + 
+theme(text= element_text(size = 8))
+```
+
+
+```{r descgraph3, eval=FALSE, fig.align="center", fig.cap="Desciptive graphics for main set of features (not scaling) - 3", fig.height=4, fig.width=6, message=FALSE, warning=FALSE, include=FALSE}
+# Scatter-plot of Salary against first 6 predictors
+ggpairs(trainData[c(1,16:22)], ggplot2::aes(colour=class), axisLabels = c("none"),
+        upper = list(continuous = wrap(ggally_cor, alpha = 0.5, size=1), 
+                     combo = wrap("box_no_facet", size=0.1, outlier.size=0.1)),
+        lower = list(continuous = wrap("points", alpha = 0.3, size=0.1), 
+        combo = wrap("dot", alpha = 0.4, size=0.1))) + 
+theme(text= element_text(size = 8))
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# A first start would be to investigate each coarseness level
+#create a list of dataframes
+trainingList <- list()
+
+#create new data-frame for each coarseness level
+
+for( i in 1:7){
+  #set the name to data + coarseness value
+  name<- paste("data", i*20, sep = "")
+  #first column index of the selected coarseness
+  begin = (i-1)*21+2
+  #last column index
+  ending = begin+20
+  #assign the first column and the columns between first and last
+  assign(name, trainData[,c(1,begin:ending)])
+  # add to the list
+  trainingList[[i]] <- trainData[,c(1,begin:ending)]
+}
+```
+
+
+```{r multicol1, echo=FALSE, fig.align="center", fig.cap="Multicolinearity. Features (Area, Round, Brigh) at different scales", message=FALSE, warning=FALSE, fig.height=1.5, fig.width=6}
+# check collinearity among repeated variables
+
+# prepareMyList <- function(the_cor, the_data) {
+#   plot <- function() {
+#     # Note: variables "r" and "p" are bound from within the closure
+#     corrplot.mixed(the_cor, upper = 'circle', lower = 'number', 
+#                    title = colnames(the_data), mar=c(0,0,1,0))
+#   }
+#   return(plot) # this is returned
+# }
+
+
+corList <- list()
+par(mfrow=c(1,3))
+#looping through all repeated variables
+for(i in 3:5){
+  #creating a dataframe with coarseness 20, and attribute i
+  df <- trainingList[[1]][,i]
+  for(j in 2:7){
+    #adding the same attribute from a different coarseness level
+    df <- cbind(df,trainingList[[j]][,i] )
+    colnames(df)[j]<- paste(j*20)
+  }
+  colnames(df)[1]<- "20"
+  #adding a correlation matrix to the list
+  corList[[i]] <-  cor(df)
+  #plotting 21 correlation matrices
+  corrplot.mixed(corList[[i]], upper = 'circle', lower = 'number',
+                 mar=c(0,0,1,0), number.cex = 0.7)
+}
+```
+
+
+```{r multicol2, echo=FALSE, fig.align="center", fig.cap="Multicolinearity between features at the same scales (left: no scale, right: coarseness level 40)", fig.height=2.5, fig.width=6.5, message=FALSE, warning=FALSE}
+# checking the correlation among different attributes within the same coarseness
+corList2 <- list()
+par(mfrow=c(1,2))
+for(i in 1:2){
+  corList2[[i]] <- cor(trainingList[[i]][,2:22])
+  corrplot.mixed(corList2[[i]],addCoef.col = 'black', number.cex = 0.2, upper = 'circle', 
+                 tl.cex=0.4, lower = 'number', mar=c(0,0,1,0),
+                 cl.cex = 0.5, diag = "n", tl.pos = "lt")
+}
+
+```
+
+\FloatBarrier
+
+
+```{r eval=FALSE, include=FALSE}
+dplyr::glimpse(trainData[2:22])
+```
+
+
+```{r include=FALSE}
+colnames(trainData)[2:22]
+```
+
+ 
+
+```{r include=FALSE}
+colnames(trainData)[23:43]
+```
+
+```{r include=FALSE}
+colnames(trainData)[44:64]
+```
+
+```{r include=FALSE}
+colnames(trainData)[65:85]
+```
+
+
+```{r include=FALSE}
+colnames(trainData)[86:106]
+```
+
+
+```{r include=FALSE}
+colnames(trainData)[107:127]
+```
+
+```{r include=FALSE}
+colnames(trainData)[128:148]
+```
+
+
+# References
+
+
