@@ -1,0 +1,18 @@
+### Methodology:
+Restating the objectives of this project: 1- The practical end-goal is to reduce the cost of the photogrammetric data collection process by selecting a single coarseness level (resolution) that produces most accurate prediction. 2- To optimize object identification by selecting the best classification method. Given these objectives, the project team opted to perform concurrent analyses on the data where all proposed classification methods are used to classify objects across all coarseness levels; The combination of resolution and classification method that produces the most accurate predictions on the testing data will be selected as the one that meets the objectives.
+
+
+## A- Available resolutions and variables:
+The data was already collected and presented at 7 coarseness levels, each having 21 variable. The data will be processing will include: eliminating highly correlated variables resulting in 12 independent variables; and nominalizing all values to be used in the Neural Networks model.
+
+## B- Classification methods:
+The team will be attempting 3 different classification methods:
+
+#a- Neural Networks:
+A supervised feed-forward neural networks model will be trained using the training data (168 points); and consists of 12 nodes in the input layer and 9 nodes in the output layer representing the available variables and the object classes. The team will attempt to optimize the models by varying the number of hidden layers, their nodes, and testing multiple activation functions. The resultant models will be used to predict the the testing to estimate each model's accuracy.
+
+#b- Random Forest:
+The random forest decision tree model is less computationally expensive to train and to implement, thus, serving the objective of reducing data collection and classification cost. The decision tree model is created by recursively branching the data using the variable that adds most to the prediction of model; from that branch further branching is made using the best variable (the same variable may be used again). The recursion process stops when no further branching adds to the prediction value (e.g. when when splitting the data results in 50/50 odds). The random forest creates multiple decision trees, each with different and random branching, regardless of the predictive power. The prediction the one which the majority of the trees selects.
+
+#c- K-Nearest Neighbor:
+The simplest of models, where the class of an input is determined by its neighboring pints. The euclidean distance is used to determine the distance from other data points; and the class of the input point is predicted to be the same is the majority of its neighbors. The number of nearset neighbors can tuned to produce accurate predictions.
