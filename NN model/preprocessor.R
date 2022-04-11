@@ -1,1 +1,1 @@
-# preproccessor fetches the data and separate the different coarseness levels
+# preprocessor fetches the data and separate the different coarseness levels

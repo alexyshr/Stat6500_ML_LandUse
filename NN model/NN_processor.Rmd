@@ -1,0 +1,43 @@
+---
+title: "NN_processor"
+author: "Abdulaziz AlSugair"
+date: "4/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Neural Networks Analysis
+This analysis uses multi-layer feed-forward neural network to predict the class of an object given the results from photogrammetric data. The data set is provided by XXXX and is already labeled and separated into train and test data sets. The analysis includes three major steps:
+1- Pre-process:
+The routine fetches the raw data, separate them into seven data sets corresponding to each coarseness level (total of 14 sets). Additionally, provides reduced sets using results from the exploratory data analysis.
+2- Processor:
+This is the main routine. Data is normalized, then processed through multiple NN models. 
+3- Post-processor:
+This routine produces results and graphs.
+
+##Pre-Process
+The following R-code calls the scripts 'preprocessor.r' and stores the data into the environment.
+```{r, preprocessor}
+
+
+```
+
+
+##Processor
+The following R-code handles the actual analysis
+
+```{r, processor}
+
+
+```
+
+##Post-processor
+The follwing R-code calls 'postprocessor.R' script to output relavent results
+
+```{r, postprocessor}
+
+```
+
