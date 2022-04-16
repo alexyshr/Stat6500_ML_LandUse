@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(nnet)
 ```
 
 #Neural Networks Analysis
@@ -21,7 +22,8 @@ This routine produces results and graphs.
 ##Pre-Process
 The following R-code calls the scripts 'preprocessor.r' and stores the data into the environment.
 ```{r, preprocessor}
-
+#This routine only loads the data from original .csv files, and separate them into each coarseness level, no need to write the code here since its function is trivial
+source('preprocessor.r', local = TRUE)
 
 ```
 
