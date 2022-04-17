@@ -53,8 +53,8 @@ t3
 #*  4- confusion matrices and accuracy results
 #*  
 #*  steps:
-#*  1- create 3 nested loops, top for NN shape, middle for coarseness, and innermost for dataset size
-#*  2- in the innermost loop:
+#*  1- Optimize for NN shape and used algorithm
+#*  2- Loop through 7 coarseness levels and 2 datasets:
 #*  2-i)  train a NN model
 #*  2-ii) predict its testing counterpart
 #*  2-iii) produce confusion matrix
@@ -68,6 +68,8 @@ t3
 #*  5- confusion matrix (partial) (table)
 #*  6- accuracy (partial) (vector [total, FP rate, FN rate])
 #*  
+
+# 1- optimize for NN shape and activation function
 
 ```
 
