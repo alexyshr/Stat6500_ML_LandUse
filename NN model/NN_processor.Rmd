@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(nnet)
+library(neuralnet)
 ```
 
 #Neural Networks Analysis
@@ -30,16 +30,52 @@ source('preprocessor.r', local = TRUE)
 
 ##Processor
 The following R-code handles the actual analysis
+```{r, debugging}
+# This code is just for initial testing and debugging 
+# fitting a neural network, using training data, 2 hidden layers, 10 nodes each
+fit <- neuralnet(class~. , data = trainingData20, hidden = c(10,10),linear.output = FALSE)
+#plotting the NN
+plot(fit) # move to 'postprocessor.R' after debugging
+#predicting values of the testing coarseness level counterpart
+pr <- predict(fit, testingData20)
+#confusion matrix, actual vs. predicted
+t3 <- table(testingData20$class, apply(pr, 1, which.max))
+t3
+
+```
+
 
 ```{r, processor}
-
+#*  components:
+#*  1- loop through different coarseness levels (7 loops)
+#*  2- looping through full and partial datasets (2 loops)
+#*  3- tuning for NN shape (i.e. no. of hidden layers, and size of each) (TBD loops)
+#*  4- confusion matrices and accuracy results
+#*  
+#*  steps:
+#*  1- create 3 nested loops, top for NN shape, middle for coarseness, and innermost for dataset size
+#*  2- in the innermost loop:
+#*  2-i)  train a NN model
+#*  2-ii) predict its testing counterpart
+#*  2-iii) produce confusion matrix
+#*  2-iv) calculate accuracy
+#*  
+#*  outputs: a large list containing:
+#*  1- Coarseness level (name [string])
+#*  2- NN-model (object)
+#*  3- confusion matix (full) (table)
+#*  4- accuracy (full) (vector [total, FP rate, FN rate])
+#*  5- confusion matrix (partial) (table)
+#*  6- accuracy (partial) (vector [total, FP rate, FN rate])
+#*  
 
 ```
 
 ##Post-processor
-The follwing R-code calls 'postprocessor.R' script to output relavent results
+The following R-code calls 'postprocessor.R' script to output relavent results
 
 ```{r, postprocessor}
+
 
 ```
 
