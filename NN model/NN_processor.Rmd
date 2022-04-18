@@ -33,13 +33,13 @@ The following R-code handles the actual analysis
 ```{r, debugging}
 # This code is just for initial testing and debugging 
 # fitting a neural network, using training data, 2 hidden layers, 10 nodes each
-fit <- neuralnet(class~. , data = trainingData20, hidden = c(10,10),linear.output = FALSE)
+fit <- neuralnet(class~. , data = parTrainingList[[2]], hidden = c(13,13), algorithm = "rprop+", linear.output = FALSE)
 #plotting the NN
 plot(fit) # move to 'postprocessor.R' after debugging
 #predicting values of the testing coarseness level counterpart
-pr <- predict(fit, testingData20)
+pr <- predict(fit, parTestingList[[2]])
 #confusion matrix, actual vs. predicted
-t3 <- table(testingData20$class, apply(pr, 1, which.max))
+t3 <- table(parTestingList[[2]]$class, apply(pr, 1, which.max))
 t3
 
 ```
