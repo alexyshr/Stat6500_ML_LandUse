@@ -11,10 +11,15 @@ sum(is.na(trainData)); sum(is.na(testData))
 sum(!sapply(trainData[,!1], is.finite)); sum(!sapply(testData[,!1], is.finite))
 #no missing or NaN data
 
-## 3- Change to categorical)
+## 3- Change to class to categorical, and normalize variables
 # convert class from "char" into a factor
 trainData$class <- as.factor(trainData$class)
 testData$class <- as.factor(testData$class)
+
+#normalize variables 
+norm_vals <- function(x) {(x-min(x))/(max(x)-min(x))}
+trainData[2:148] <- lapply(trainData[2:148], norm_vals)
+testData[2:148] <- lapply(testData[2:148], norm_vals)
 
 # create a list of variables to be deleted 
 # omitted variables: Brdindx, Shpindx, compact, round, Mean_G, Mean_R, Mean_NIR, SD_R, SD_NIR
@@ -47,6 +52,5 @@ for( i in 1:7){
 }
 
 ## 5- clean the work space
-rm(begin); rm(ending); rm(i); rm(trainData); rm(testData); rm(partialList)
-
+rm(begin, ending, i, trainData, testData, partialList, norm_vals)
 # Now all variables in the work space will called into "NN_Processor.Rmd"

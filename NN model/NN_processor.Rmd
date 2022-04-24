@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(neuralnet)
+library(tictoc)
 ```
 
 #Neural Networks Analysis
@@ -29,55 +30,112 @@ source('preprocessor.r', local = TRUE)
 
 
 ##Processor
-The following R-code handles the actual analysis
-```{r, debugging}
-# This code is just for initial testing and debugging 
-# fitting a neural network, using training data, 2 hidden layers, 10 nodes each
-fit <- neuralnet(class~. , data = parTrainingList[[2]], hidden = c(13,13), algorithm = "rprop+", linear.output = FALSE)
-#plotting the NN
-plot(fit) # move to 'postprocessor.R' after debugging
-#predicting values of the testing coarseness level counterpart
-pr <- predict(fit, parTestingList[[2]])
-#confusion matrix, actual vs. predicted
-t3 <- table(parTestingList[[2]]$class, apply(pr, 1, which.max))
-t3
+The following R-code handles the actual analysis.  
+The 'neuralnet' package is used to fit the NN models with the follwing parameters:  
+* formula: class~. (the class versus all other variables (first order, no interactions))
+* data: looped through a list of 14 datasets (7 full, and 7 partial sets)
+* hidden: looped through 6 hidden layer configurations (10, 10-10, 10-10-10, 20, 20-20, 20-20-20)
+* stepmax = 1e+05 (the maximum number of epochs)
+* algorithm: rprop+ (resilient backpropagation with weight backtracking)
+* err.fct = sse (use sum of squared error in the stopping criteria) (refer to threshold for value)
+* threshold: 0.01 (the absolute partial derivative difference from previous step)
+* act.fct = logistic (use logistic function as activation function)
+* likelihood = true (to calculate AIC and BIC)
 
-```
 
 
 ```{r, processor}
-#*  components:
-#*  1- loop through different coarseness levels (7 loops)
-#*  2- looping through full and partial datasets (2 loops)
-#*  3- tuning for NN shape (i.e. no. of hidden layers, and size of each) (TBD loops)
-#*  4- confusion matrices and accuracy results
+#* This section includes the fitting and evaluation of neural networks
 #*  
-#*  steps:
-#*  1- Optimize for NN shape and used algorithm
-#*  2- Loop through 7 coarseness levels and 2 datasets:
-#*  2-i)  train a NN model
-#*  2-ii) predict its testing counterpart
-#*  2-iii) produce confusion matrix
-#*  2-iv) calculate accuracy
-#*  
-#*  outputs: a large list containing:
-#*  1- Coarseness level (name [string])
-#*  2- NN-model (object)
-#*  3- confusion matix (full) (table)
-#*  4- accuracy (full) (vector [total, FP rate, FN rate])
-#*  5- confusion matrix (partial) (table)
-#*  6- accuracy (partial) (vector [total, FP rate, FN rate])
-#*  
+set.seed(6500)
+# declare output dataframe
+results <- data.frame("Data Set" = 0, "configurations" = 0, "Test Error Rate" = 1, 
+                      "Time" = 0, "AIC" = 0, "BIC" = 0, "Steps" = 0)
+# declare hidden list configurations
+hiddenList <- list()
+hiddenList[[1]] <- 10; hiddenList[[2]] <- c(10,10); hiddenList[[3]] <- c(10,10,10)
+hiddenList[[4]] <- 20; hiddenList[[5]] <- c(20,20); hiddenList[[6]] <- c(20,20,20)
 
-# 1- optimize for NN shape and activation function
+#declare best fit list
+bestFit <- list()
 
+#loop through length of lists
+for (i in 1:length(trainingList)){ 
+  #loop through hidden list configurations
+  for (j in 1:length(hiddenList) ){ 
+    #full data set
+    #start timer
+    tic()
+     # fit a neural network for the full data set
+    fit <- neuralnet(class~. , data = trainingList[[i]], hidden = hiddenList[[j]], algorithm = "rprop+", act.fct = 'logistic',  linear.output = FALSE, likelihood = TRUE)
+    #stop timer
+    timer <- toc(quiet = TRUE)
+    #predicting values of testing set using fit model
+    pred <- predict(fit, testingList[[i]])
+    #confusion matrix, actual vs. predicted
+    cMatrix <- table(testingList[[i]]$class, apply(pred, 1, which.max))
+    #name for the configuration
+    config <- paste(hiddenList[j])
+    #calculating test error rate
+    testError <- 1- sum(diag(cMatrix))/length(testingList[[i]]$class)
+    # combining data set name, hidden configuration, error rate, and compute time
+    outcome <- c(names(trainingList[i]), config, testError, (timer$toc-timer$tic), fit$result.matrix[4], fit$result.matrix[5], fit$result.matrix[3])
+    # save the best fit
+    if(outcome[3] < min(results$Test.Error.Rate)){ bestFit[[1]] <- fit; bestFit[[2]] <- outcome }
+    #add outcome to the results dataframe
+    results <- rbind(results, outcome)
+    
+    #partial data set
+    #start timer
+    tic()
+     # fit a neural network for the full data set
+    fit <- neuralnet(class~. , data = parTrainingList[[i]], hidden = hiddenList[[j]], algorithm = "rprop+", act.fct = 'logistic',  linear.output = FALSE, likelihood = TRUE)
+    #stop timer
+    timer <- toc(quiet = TRUE)
+    #predicting values of testing set using fit model
+    pred <- predict(fit, parTestingList[[i]])
+    #confusion matrix, actual vs. predicted
+    cMatrix <- table(parTestingList[[i]]$class, apply(pred, 1, which.max))
+    #name for the configuration
+    config <- paste(hiddenList[j])
+    #calculating test error rate
+    testError <- 1- sum(diag(cMatrix))/length(parTestingList[[i]]$class)
+    # combining data set name, hidden configuration, error rate, and compute time
+    outcome <- c(names(parTrainingList[i]), config, testError, (timer$toc-timer$tic), fit$result.matrix[4], fit$result.matrix[5], fit$result.matrix[3])
+    # save the best fit
+    if(outcome[3] < min(results$Test.Error.Rate)){ bestFit <- c(fit, outcome)}
+    #add outcome to the results dataframe
+    results <- rbind(results, outcome)
+  }
+}
+
+# cleanup
+results <- results[-1,]
+rm(fit, pred, timer, cMatrix, i, j, outcome, testError, config)
 ```
 
 ##Post-processor
 The following R-code calls 'postprocessor.R' script to output relavent results
 
 ```{r, postprocessor}
+plot(bestFit[[1]])
+#top 6 results ordered by test error rate 
+head(results[order(results$Test.Error.Rate),])
+
 
 
 ```
+
+## Results:
+Total of 84 models have been trained each with a different 1- number of variables (full=22, partial = 13), 2- coarseness level (7 levels from base = 20 to 140, with 20 increment steps), and 3- hidden layer configuration (6 configurations, 1-3 layers, and 10,20 nodes per layer).  
+Best model was selected based on test error rate, however, training time, AIC, and BIC were also considered. Ranges for the selection criteria are:  
+Test Error Rate: 28% - 46.7% (best model is "trainingData80" with configuration c(20,20) [Err = 28%])  
+Training Time: 0.37 - 1.64 seconds (best model is "trainingData20" with configuration 10 [Err = 36%])  
+AIC: 464 - 2946 (best model is "parTrainingData20" with configuration 10 [Err = 43%])  
+BIC: 1179 - 7535 (best model is "parTrainingData20" with configuration 10 [Err = 43%])
+
+The model "trainingData80" with confugration (2 hidden layer, 20 nodes each) will be selected as the best candidate. Reasons for this selection include: 1- it has the minimum test error rate (30%); 2- Training time is relatively small (0.62 seconds, vs. best = 0.37 seconds); 3- AIC (2101 vs. best = 464) and BIC (5378 vs. best = 1179) were disregarded since different datasets and different types of models will be used in the final evaluation (NN model vs. Random Forests vs. XXXX).
+
+
+
 
