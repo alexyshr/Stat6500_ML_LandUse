@@ -304,7 +304,7 @@ par(mfrow=c(1,2))
 for(i in 1:2){
   corList2[[i]] <- cor(trainingList[[i]][,2:22])
   corrplot.mixed(corList2[[i]],addCoef.col = 'black', number.cex = 0.2, upper = 'circle', 
-                 tl.cex=0.4, lower = 'number', mar=c(0,0,1,0),
+                 tl.cex=0.4, tl.col="black", lower = 'number', mar=c(0,0,1,0),
                  cl.cex = 0.5, diag = "n", tl.pos = "lt")
 }
 
