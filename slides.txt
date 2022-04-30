@@ -1,0 +1,19 @@
+with the land cover map, the original author extracted from the pixel, super-objects in vector format
+are super-objects because those represent the objects (buildings, trees, etcetera) that each pixel belongs too. tha algorithm depend of the pixel scale. If you use small scale (left image a - scale 20) the super-object will not be extracted complete (multiple polygons), but if you use very large scale (righ image c - scale 140), then different super-objects will be mixed in one polygon (one image segment). Depending of the scale the extraction ob the objects perform better (scale 80 image c on the center)
+
+
+the features (spectral, texture, size, shape) (table 1) were extracted for the different image segments at different scales. As we mentioned before the extraction of the super-objects was performed for 7 different scales (20, 40, 60, 80, 100, 120, 140) representing the seven different feature sets we have for the project, so in conclusion we have the same type of features (area, round, bright, compact, shapeindex, etc) for each feature set
+
+here we are coparing the same features (in this case area, round, bright) across different scales, and of course they are correlated, because represent same feature but at different super object size (image segmentation vectors with different scale in its extraction). In we use the individual features sets to perform machine learning analysis we will not face this multicolinearity problem 
+
+In this case we are comparing features inside the feature sets. In the left side the features belonging to the super-objects at extraction scale of 20. In the right side features belonging to the super-obkects at scale 40. And we also found high correlated features. This means that for some ML lersning methos we need to do feature selection in advance to the application, but for instance for the case of random fores, the same algorith will use more importan features for the process (we don't need to remove features higly correlated)
+
+We aplied RF once for each different feature set (using the original features and with transformed features, this mean scaled features). The feature set that performed better was number 2 and it corresponds to the super-objects extracted at image segementation scale of 40%, with model accuracy of 79.2%.
+
+Note that transforming the data (scaling variables) did not improve the accuracy of the model.
+
+
+For the feature set with the best score, we can see the variable importance using the total amount of decrease in node impurity due to the splits over the predictor (left image) and permutation variable importance (using 36% of the OUT OF BAG samples not used for the bagging process) (righ image). Both methods agree that the vegetation index is the most important variable (taller bar), but there are differences in the importance of the other variables. The second most importan variable is the mean of the grend band pixels for the super-objects at scale 40% (left image), in the righ method is the Are of the super object.
+
+Using all the feature sets (140 transformed or scale variables) at the same time, the performance of RF improves from 79 for scale 40 (feature set 2) to 82%
+

@@ -1,0 +1,264 @@
+---
+output: 
+  bookdown::pdf_document2:
+    toc: False
+    extra_dependencies: ["float"]
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{lastpage}
+- \usepackage{amsmath}
+- \usepackage{tocloft}
+- \usepackage{placeins}
+- \usepackage{float}
+bibliography: ref.bib
+link-citations: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+#knitr::opts_chunk$set(fig.pos = "!H", out.extra = "")
+library(reticulate)
+library(GGally)
+library(dplyr)
+library(bookdown)
+library(GGally)
+library(corrplot)
+library(knitr)
+library(kableExtra)
+```
+
+
+```{python include=FALSE}
+import numpy as np
+import pandas as pd
+import seaborn as sns
+sns.set_style('whitegrid')
+import matplotlib.pyplot as plt
+import os
+import time
+from plotly import tools
+from plotly.offline import plot
+import plotly.offline as py
+from plotly.graph_objs import Scatter, Layout
+import plotly.graph_objs as go
+import plotly.figure_factory as ff
+```
+
+
+\fancyfoot[C]{\thepage\ of \pageref{LastPage}}
+
+\newpage
+\begin{titlepage}
+\begin{center}
+\vspace*{1cm}
+\large{STAT 6500}\\
+\vspace*{2cm}
+\line(1,0){400}\\
+\huge{\textbf{Statistical Machine Learning}}\\
+\vspace*{1cm}
+Land Use Cover\\
+\vspace*{1cm}
+\normalsize{\textbf{Kendall Byrd - Atitarn Dechasuravanit - Alexys Rodriguez - Abdulaziz Alsugair}}\\
+
+\vspace*{1cm}
+\normalsize{Final Report}\\
+
+\line(1,0){400}
+\vfill
+\huge{Spring 2022}\\
+Wednesday, March 2
+\end{center}
+\end{titlepage}
+
+
+\newpage
+\tableofcontents
+ 
+
+\newpage
+\pagestyle{fancy}
+\fancyhead[L]{\slshape Land Use Cover}
+\fancyhead[C]{\slshape STAT 6500}
+\fancyhead[R]{\slshape Final Report}
+
+# Introduction
+
+The authors of the original project, in @Johnson2013 classified a high resolution image of an urban area using super-object information, i.e. the objects in the images (groups of pixels), representing real objects in the field (buildings, trees, cars, etc.) that an specific pixel belongs to. To extract those super-objects an image segmentation method to generate vectors (polygons) representing the real objects was used. Mentioned algorithm, mainly depends of the input parameter *image pixel scale*, which represent the scale of the image used, relative to the original pixel size. Single pixels or fine-scale image segments, for instance in Figure \@ref(fig:imagesegmentation), 20% left image (a), can generate multiple segments (polygons) for each super-object, and on the other side, a coarser scale, right image (c) at 140%, can mix multiple super-objects into one image segment. Depending of the real size of the original super object, there is an optimum extraction scale, center image (b) at 80%. @Johnson2013 extracted the super-object for multiple image segmentation scales, i.e. 20%, 40%, 60%, 80%, 100%, 120%, and 140%, and for each one, assigned spectral (vegetation index NDVI, average objects reflectance for each spectral band, etc), texture (contrast, correlation, energy or homogeneity from the Gray-level co-occurrence matrix - GLCM), size (area, length, others) and shape (roundness, shape index, etc.) feature information, with the purpose of measure the contribution of coarseness scales (individually and together) in the classification of the image, using machine learning techniques. In @Johnson2012, the authors created the land cover map from the original image, taking advantage of the improvements in model accuracy due to the additional feature information at different image segmentation scales.
+
+
+
+```{r imagesegmentation, echo=FALSE, fig.align="center", fig.cap="Image segmentation as a function of the Scale. Source: Johnson (2021)", message=FALSE, warning=FALSE, out.width = "60%"}
+knitr::include_graphics("./in/image_segmentation-scale.png", dpi=NA)
+```
+
+\FloatBarrier
+
+For this study, we propose implementing machine learning techniques on satellite imagery to determine the effect scale has on accurately classifying features extracted from the images. The dataset that will be analyzed in this project is the Urban Land Cover Data Set, see @urbanlandcover. This data can be found in the UCI Machine Learning Repository and was originally sourced by the authors of [@Johnson2012; @Johnson2013].
+
+
+## Data Description
+
+The Urban Land Cover Data Set is a multivariate data set with dimensions of 168 rows and 148 columns. It has twenty-two attributes, that are repeated for seven different coarser scales. This data set contains training and testing data for classifying a high-resolution aerial image into nine classes (target classification variable) of urban land cover.  The nine land cover classes are *concrete*, *trees*, *soil*, *grass*, *buildings*, *cars*, *asphalt*, *pools*, and *shadows*. There are a low number of training samples for each class (14-30) and a high number of classification variables (148), so testing different feature selection methods will be interesting. The testing data set was generated from random sampling of the image. All attribute abbreviations and brief explanations can be seen in the Table \@ref(tab:table1).
+
+
+```{r table1, echo=FALSE}
+df = read.csv("./data/variable_description.csv", header=FALSE)
+knitr::kable(df, caption = "Variables Description",
+             col.names = c("Variables", 
+                           "Variables")) %>%
+      column_spec(1,width = "2in") %>%
+      column_spec(2,width = "3.8in") %>%
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+
+\FloatBarrier
+
+Table \@ref(tab:cs) describes the features set for different coarser scales.
+
+
+```{r cs, echo=FALSE}
+df = read.csv("./data/feature_sets.csv")
+knitr::kable(df, caption = "Feature Sets by Scales", 
+             col.names = c("Feature Set", "Scale", 
+                           "Number of Variables", "Variables Names",
+                           "Variables Suffix")) %>%
+      #column_spec(1,width = "2in") %>%
+      #column_spec(2,width = "3.8in") %>%
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+\FloatBarrier
+
+
+## Project Objectives
+
+The practical end-goal is:
+
+1. To reduce the cost of the photogrammetric data collection process by selecting a single coarseness level (resolution) that produces most accurate prediction, and
+
+2. To optimize object identification by selecting the best classification method
+
+# Problem statement
+
+Based on the study from @urbanlandcover, urban land-cover information is essential for numerous urban-planning applications, for instance, green space analysis (@inbook) and urban land-use mapping (@article). Most land cover has traditionally been obtained from satellite images using pixel-based image classification techniques. Nevertheless, in fine spatial resolution images with spectral variability within the same class can lead to low accuracy for classification using pixel-based image classification techniques. Therefore, @urbanlandcover presented the Object-based classification methods involving segmentation of the image on different scales. The average size of the segment will vary depending on the specified scale parameter. These scales were ranging from 40 to 140 with 20 intervals in this study. For each image segment, features such as spectral (mean values and variance for each band), mean normalized differential vegetation index (NDVI), area, shape, texture, length and so on were calculated in one of different scales (21 features for each scale). 
+
+This project aims to use the machine learning techniques and statistical tools which are different than the techniques used from the study of @urbanlandcover to predict the target class of the object derived from segmentation at different scales of high-resolution urban-land cover image. Three machine learning techniques which are neural networks, random forest and k-nearest neighbors will be used for this project. The comparison of different classifier for each scale and how well the classifier can perform at each scale will be analyzed. In total, 24 machine learning models will be implemented in this study (seven scales with three machine learning techniques for each scale, plus the three methods applied to the whole dataset) 
+
+
+# Methods
+
+Given mentioned objectives, the project team opted to perform concurrent analyses on the data where all proposed classification methods are used to classify objects across all coarseness levels; The combination of resolution and classification method that produces the most accurate predictions on the testing data will be selected as the one that meets the objectives.
+
+
+## Available resolutions and variables
+
+The data was already collected and presented at 7 coarseness levels, each having 21 variable. The data will be processing will include: eliminating highly correlated variables resulting in 12 independent variables; and nominalizing all values to be used in the Neural Networks model.
+
+## Classification methods
+
+The team will be attempting 3 different classification methods:
+
+### Neural Networks
+
+A supervised feed-forward neural networks model will be trained using the training data (168 points); and consists of 12 nodes in the input layer and 9 nodes in the output layer representing the available variables and the object classes. The team will attempt to optimize the models by varying the number of hidden layers, their nodes, and testing multiple activation functions. The resultant models will be used to predict the the testing to estimate each model's accuracy. For a overview, frameworks and challenges of Neural Networks see @Prieto2016.
+
+### Random Forest
+
+The random forest decision tree model is less computationally expensive to train and to implement, thus, serving the objective of reducing data collection and classification cost. The decision tree model is created by recursively branching the data using the variable that adds most to the prediction of model; from that branch further branching is made using the best variable (the same variable may be used again). The recursion process stops when no further branching adds to the prediction value (e.g. when splitting the data results in 50/50 odds). The random forest creates multiple decision trees, each with different and random branching, regardless of the predictive power. The prediction can be performed using voting schema (majority) or averaging the results. More information applications of random forest classifier in remote sensors can be found in @Belgiu2016.
+
+### K-Nearest Neighbor
+
+The simplest of models, where the class of an input is determined by its neighboring pints. The euclidean distance is used to determine the distance from other data points; and the class of the input point is predicted to be the same is the majority of its neighbors. The number of nearest neighbors can tuned to produce accurate predictions. See @Taunk2019 for a clear review of this classifier for learning and classification purposes.
+
+# Results
+
+### Neural Networks
+
+### Random Forest
+
+#### Individual Feature Sets
+
+```{r rfif, echo=FALSE, fig.align="center", fig.cap="RF individual feature sets (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "100%"}
+knitr::include_graphics("./out/rf_if.png", dpi=NA)
+```
+
+
+\FloatBarrier
+
+```{r rffi, echo=FALSE, fig.align="center", fig.cap="RF Feature Importances (MDI vs Permutation).", message=FALSE, warning=FALSE, out.width = "100%"}
+knitr::include_graphics("./out/rf_fi.png", dpi=NA)
+```
+
+\FloatBarrier
+
+
+#### All Feature Sets
+
+
+
+```{r rfaf, echo=FALSE, fig.align="center", fig.cap="RF all features (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "50%"}
+knitr::include_graphics("./out/rf_af.png", dpi=NA)
+```
+
+\FloatBarrier
+
+### Nearest Neighbours
+
+
+#### Individual Feature Sets
+
+```{r knnif, echo=FALSE, fig.align="center", fig.cap="KNN individual feature sets (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "100%"}
+knitr::include_graphics("./out/knn_if.png", dpi=NA)
+```
+
+\FloatBarrier
+
+
+#### All Feature Sets
+
+
+
+```{r knnaf, echo=FALSE, fig.align="center", fig.cap="RF all features (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "50%"}
+knitr::include_graphics("./out/knn_af.png", dpi=NA)
+```
+
+\FloatBarrier
+
+
+# Disscussion and Conclusions
+
+
+The Table \@ref(tab:ball), shows the best model for all methods, indicating if the data was transformed (standard scaling) and the image segmentation scale of the corresponding feature set.
+
+accuracy_best_all_methods.csv
+
+```{r ball, echo=FALSE}
+df = read.csv("./out/accuracy_best_all_methods.csv", header=T)
+knitr::kable(df, caption = "Best Model. All Machine Learning Methods") %>% #,
+             #col.names = c("Variables", 
+            #               "Variables")) %>%
+      #column_spec(1,width = "2in") %>%
+      #column_spec(2,width = "3.8in") %>%
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+\FloatBarrier
+
+
+The Figure \@ref(fig:bm), shows the classification report for the best model.
+
+```{r bm, echo=FALSE, fig.align="center", fig.cap="Classification Report - Best Model. RF Scale 40. Feature Set 2 (not transformed)", message=FALSE, warning=FALSE, out.width = "60%"}
+knitr::include_graphics("./out/rf_bm.png", dpi=NA)
+```
+\FloatBarrier
+
+
+# References
+
+

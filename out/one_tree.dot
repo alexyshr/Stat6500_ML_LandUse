@@ -1,0 +1,8 @@
+digraph Tree {
+node [shape=box, style="filled, rounded", color="black", fontname="helvetica"] ;
+edge [fontname="helvetica"] ;
+0 [label="Mean_R_100 <= 103.81\nentropy = 3.03\nsamples = 64\nvalue = [10, 6, 8, 14, 18, 3, 8, 7, 10]\nclass = s", fillcolor="#f4fdfe"] ;
+1 [label="NDVI_100 <= 0.23\nentropy = 1.58\nsamples = 18\nvalue = [10, 0, 0, 0, 0, 0, 8, 0, 9]\nclass = c", fillcolor="#fef8f4"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="entropy = 0.99\nsamples = 11\nvalue = [10, 0, 0, 0, 0, 0, 8, 0, 0]\nclass = c", fillcolor="#fae6d7"] ;
+1 -> 2 ;

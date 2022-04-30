@@ -297,7 +297,7 @@ for(i in 3:5){
 ```
 
 
-```{r multicol2, echo=FALSE, fig.align="center", fig.cap="Multicolinearity between features at the same scales (left: no scale, right: coarseness level 40)", fig.height=2.5, fig.width=6.5, message=FALSE, warning=FALSE}
+```{r multicol2, echo=FALSE, fig.align="center", fig.cap="Multicolinearity between features at the same scales (left: 20, right: 40)", fig.height=2.5, fig.width=6.5, message=FALSE, warning=FALSE}
 # checking the correlation among different attributes within the same coarseness
 corList2 <- list()
 par(mfrow=c(1,2))

@@ -1,0 +1,5 @@
+Method,Individual Feature Sets,Individual Feature Sets,Individual Feature Sets,All Feature Sets
+Method,Data,Segmentation Scale,Accuracy,Accuracy
+Neural Network,Not Transformed,80,72,63.3
+Random Forest,Not Transformed,40,79.3,82.2
+Nearest Neighbours,Transformed (Scaled),80,71.8,77.7
