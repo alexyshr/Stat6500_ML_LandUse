@@ -169,7 +169,7 @@ The team will be attempting 3 different classification methods:
 
 ### Neural Networks
 
-A supervised feed-forward neural networks model will be trained using the training data (168 points); and consists of 12 nodes in the input layer and 9 nodes in the output layer representing the available variables and the object classes. The team will attempt to optimize the models by varying the number of hidden layers, their nodes, and testing multiple activation functions. The resultant models will be used to predict the the testing to estimate each model's accuracy. For a overview, frameworks and challenges of Neural Networks see @Prieto2016.
+A supervised feed-forward neural networks model will be trained using the training data (168 points); and consists of 21 nodes in the input layer and 9 nodes in the output layer representing the available variables and the object classes. The team will attempt to optimize the models by varying the number of hidden layers and the number of nodes in each layer. The resultant models will be used to predict the the testing to estimate each model's accuracy. For a overview, frameworks and challenges of Neural Networks see @Prieto2016.
 
 ### Random Forest
 
@@ -182,6 +182,29 @@ The simplest of models, where the class of an input is determined by its neighbo
 # Results
 
 ### Neural Networks
+A total of 42 models were trained; 7 datasets (one for each coarsenss level), 6 hidden layer configurations (1,2, or 3 layers; with 10 or 20 nodes per layer). The package 'neuralnet' was used train the models ('rprop+' algorithm; Logistic activation function; minimizing SSE as error function; stopping criteria: reaching 100,000 epochs or SSE difference of 0.01 from previous run). All 42 trained models were used to predict the test data (507 observations) from their corresponding dataset (i.e. training a model on data from coarsenss level 80, and predicting the classes on testing data 80). The tests error rate, time to train, and number of epochs to reach a stopping criteria were recorded. The test error rate ranged from 28% - 46.7%; Compute time ranged from 0.37 - 1.64 seconds; and number of epochs ranged from 294 - 1917 steps. Originally, the team was planning to use compute time/epochs as decision criteria for selecting the best model, however, training time difference was only 1.27 seconds between best and worst models. The, therefore, decided to consider test error rate solely in choosing the best model.  
+The best model (the one with least test error rate) is a model trained on dataset 80, with 2 hidden layers 20 nodes each. The plot for the best model is presented in \@ref(fig:nnp), the actual vs. predicted confusion matrix is presented in \@ref(tab:NN_conMat), and the top 6 models are presented in \@ref(tab:NN_results).  
+
+```{r nnp, echo=FALSE, fig.align="center", fig.cap="Best NN model (2 Hidden layers, 20 nodes each)", message=FALSE, warning=FALSE, out.width = "100%"}
+knitr::include_graphics("./out/NN_best_model.png", dpi=NA)
+```
+
+\FloatBarrier
+```{r NN_conMat, echo=FALSE}
+df = read.csv("./out/NN_confusion_matrix.csv", header=FALSE)
+knitr::kable(df, caption = "Best NN model: Actual vs. Predicted")
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+\FloatBarrier
+```{r NN_results, echo=FALSE}
+df = read.csv("./out/NN_results.csv", header=FALSE)
+knitr::kable(df, caption = "Best NN models (arranged by test error rate")
+kable_styling(font_size = 8, latex_options="hold_position")
+```
+
+
+\FloatBarrier
 
 ### Random Forest
 
