@@ -1,0 +1,47 @@
+---
+output: 
+  bookdown::pdf_document2:
+    toc: False
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{lastpage}
+- \usepackage{amsmath}
+- \usepackage{tocloft}
+bibliography: ref.bib
+link-citations: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+library(bookdown)
+```
+
+
+# Introduciton
+
+
+It is often stated that currently the world is in the era of ‘Big Data’. This is because there is an overwhelming amount of data generated everyday by both single individuals and large corporations. For example, there are 277,000 tweets per minute, 2 million queries are searched on Google every minute, 72 hours of video are uploaded to YouTube every minute, 100 million emails are sent, and more than 570 websites are created every minute @Gaurav2018. The massive amounts of data being generated everyday provide an ocean of information explaining individuals’ habits, corporation logistics, global trends, and much more. Naturally, many individuals and corporations wanted methods to analyze and handle these large amounts of unorthodox data. This desire led to new discoveries in statistics and paved the way for a technique referred to as statistical machine learning or simply, machine learning. 	
+
+
+Machine learning is the study of computer algorithms that can improve or ‘learn’ automatically by using information from past experiences and using data. Thanks to advancements in computational power, large datasets can be analyzed, and important information extracted. This can provide powerful insight for many areas of research. In fact, machine learning techniques can allow individuals to predict the outcome of events before they happen. Some applications of machine learning are autonomous vehicles, voice recognition, 3-D modeling, and image information extraction. For this study, we propose implementing machine learning techniques on satellite imagery to determine the effect scale has on accurately classifying features extracted from the images. The dataset that will be analyzed in this project is the Urban Land Cover Data Set. This data can be found in the UCI Machine Learning Repository and was originally sourced by Brian Johnson, who is a Research Manager at the Institute for Global Environmental Strategies.
+
+
+The Urban Land Cover Data Set is a multivariate data set with dimensions of 168 rows and 148 columns. It has twenty-two attributes, that are repeated for seven different coarser scales. This data set contains training and testing data for classifying a high-resolution aerial image into nine classes (target classification variable) of urban land cover.  The nine land cover classes are concrete, trees, soil, grass, buildings, cars, asphalt, pools, and shadows. There are a low number of training samples for each class (14-30) and a high number of classification variables (148), so testing different feature selection methods will be interesting. The testing data set was generated from random sampling of the image. All attribute abbreviations and brief explanations can be seen in the Table \@ref(tab:table1).
+
+
+
+
+```{r table1, echo=FALSE}
+df = read.csv("./data/variable_description.csv")
+knitr::kable(df, caption = "Variable Description")
+
+```
+
+
+# References
+
+
+
+
