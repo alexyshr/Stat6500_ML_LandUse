@@ -192,14 +192,14 @@ knitr::include_graphics("./out/NN_best_model.png", dpi=NA)
 \FloatBarrier
 ```{r NN_conMat, echo=FALSE}
 df = read.csv("./out/NN_confusion_matrix.csv", header=FALSE)
-knitr::kable(df, caption = "Best NN model: Actual vs. Predicted")
+knitr::kable(df, caption = "Best NN model: Actual vs. Predicted")%>%
 kable_styling(font_size = 8, latex_options="hold_position")
 ```
 
 \FloatBarrier
 ```{r NN_results, echo=FALSE}
 df = read.csv("./out/NN_results.csv", header=FALSE)
-knitr::kable(df, caption = "Best NN models (arranged by test error rate")
+knitr::kable(df, caption = "Best NN models (arranged by test error rate")%>%
 kable_styling(font_size = 8, latex_options="hold_position")
 ```
 
