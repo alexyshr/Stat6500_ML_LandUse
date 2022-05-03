@@ -181,32 +181,33 @@ The simplest of models, where the class of an input is determined by its neighbo
 
 # Results
 
-### Neural Networks
-A total of 42 models were trained; 7 datasets (one for each coarseness level), 6 hidden layer configurations (1,2, or 3 layers; with 10 or 20 nodes per layer). The package 'neuralnet' was used train the models ('rprop+' algorithm; Logistic activation function; minimizing SSE as error function; stopping criteria: reaching 100,000 epochs or SSE difference of 0.01 from previous run). All 42 trained models were used to predict the test data (507 observations) from their corresponding dataset (i.e. training a model on data from coarseness level 80, and predicting the classes on testing data 80). The tests error rate, time to train, and number of epochs to reach a stopping criteria were recorded. The test error rate ranged from 28% - 46.7%; Compute time ranged from 0.37 - 1.64 seconds; and number of epochs ranged from 294 - 1917 steps. Originally, the team was planning to use compute time/epochs as decision criteria for selecting the best model, however, training time difference was only 1.27 seconds between best and worst models. Therefore, it was decided to consider test error rate solely in choosing the best model.  
-The best model (the one with least test error rate) is a model trained on dataset 80, with 2 hidden layers 20 nodes each. The plot for the best model is presented in \@ref(fig:nnp), the actual vs. predicted confusion matrix is presented in \@ref(tab:NN_conMat), and the top 6 models are presented in \@ref(tab:NN_results).  
+## Neural Networks
+A total of 42 models were trained; 7 datasets (one for each coarseness level), 6 hidden layer configurations (1,2, or 3 layers; with 10 or 20 nodes per layer). The package 'neuralnet' was used train the models ('rprop+' algorithm; Logistic activation function; minimizing SSE as error function; stopping criteria: reaching 100,000 epochs or SSE difference of 0.01 from previous run). All 42 trained models were used to predict the test data (507 observations) from their corresponding dataset (i.e. training a model on data from coarseness level 80, and predicting the classes on testing data 80). The tests error rate, time to train, and number of epochs to reach a stopping criteria were recorded. The test error rate ranged from 28% - 46.7%; Compute time ranged from 0.37 - 1.64 seconds; and number of epochs ranged from 294 - 1917 steps. Originally, the team was planning to use compute time/epochs as decision criteria for selecting the best model, however, training time difference was only 1.27 seconds between best and worst models. Therefore, it was decided to consider test error rate solely in choosing the best model.
+
+The best model (the one with least test error rate) is a model trained on dataset 80, with 2 hidden layers 20 nodes each. The plot for the best model is presented in figure \@ref(fig:nnp), the actual vs. predicted confusion matrix is presented in figure \@ref(tab:NNconMat), and the top 6 models are presented in figure \@ref(tab:NNresults).  
 
 ```{r nnp, echo=FALSE, fig.align="center", fig.cap="Best NN model (2 Hidden layers, 20 nodes each)", message=FALSE, warning=FALSE, out.width = "100%"}
 knitr::include_graphics("./out/NN_best_model.png", dpi=NA)
 ```
 
 \FloatBarrier
-```{r NN_conMat, echo=FALSE}
-df = read.csv("./out/NN_confusion_matrix.csv", header=FALSE)
+```{r NNconMat, echo=FALSE}
+df = read.csv("./out/NN_confusion_matrix.csv", header=TRUE)
 knitr::kable(df, caption = "Best NN model: Actual vs. Predicted")%>%
 kable_styling(font_size = 8, latex_options="hold_position")
 ```
 
 \FloatBarrier
-```{r NN_results, echo=FALSE}
-df = read.csv("./out/NN_results.csv", header=FALSE)
-knitr::kable(df, caption = "Best NN models (arranged by test error rate")%>%
+```{r NNresults, echo=FALSE}
+df = read.csv("./out/NN_results.csv", header=TRUE)
+knitr::kable(df, caption = "Best NN models (arranged by test error rate)")%>%
 kable_styling(font_size = 8, latex_options="hold_position")
 ```
 
 
 \FloatBarrier
 
-### Random Forest
+## Random Forest
 
 Transforming (standard scaling) the variables did not improve the model accuracy either for individual feature sets or for all feature set analyses. Super-objects at segmentation scale of 40% perform better in order to create land cover maps using urban satellite images, for this specific case study with model accuracy of 79.3%. Once the coarseness scale increments, the accuracy of the model decrease in more that 10%, comparing with the broader scale of 140%. See Figure \@ref(fig:rfif).
 
@@ -230,11 +231,10 @@ knitr::include_graphics("./out/rf_fi.png", dpi=NA)
 Including all feature sets as a unit for random forest analysis, improved the land cover classification from 79.3% to 82.2%. 
 
 
-### Nearest Neighbours
+## Nearest Neighbours
 
-K Nearest Neighbor was applied using all features without scaling, all features with scaling, individual feature sets without scaling, and individual features sets with training. For K nearest neighbor implementation hyperparameters were tuned using the package GridSearchCV. This package allowed for a random search of best parameters using 5-fold cross validation, iterated over 1000 times. For the best model, it was found that the optimal number of neighbors was 11, Manhattan distances should be used, and all neighbors should be weighted equally. Unlike the random forest model, transforming (standard scaling) of the variables did improve the model’s accuracy for both individual feature sets and all feature set analyses (see figure \@ref(fig:knnif)). Super objects at coarseness scale of 80 provided the best results for predicting land cover types from high resolution satellite imagery, with an accuracy score of 71.8% in this project. The next best coarseness scale was 60, with just a slightly lower prediction accuracy of 71.6%. For coarseness scales above 80, the accuracy of the model decreases with each incremental increase in coarseness scale. The best KNN model classified asphalt and buildings with the highest precision, 0.83 and 0.82 respectively, and classified cars and soil with the lowest precision, 0.31 and 0.46 respectively. In summary, the KNN model with the best performance was the one with image segmentation at coarseness scale 80, which provided an accuracy of 71.8%. 
+K Nearest Neighbor was applied using all features without scaling, all features with scaling, individual feature sets without scaling, and individual features sets with training. For K nearest neighbor implementation hyperparameters were tuned using the package GridSearchCV. This package allowed for a random search of best parameters using 5-fold cross validation, iterated over 1000 times. For the best model, it was found that the optimal number of neighbors was 11, Manhattan distances should be used, and all neighbors should be weighted equally. Unlike the random forest model, transforming (standard scaling) of the variables did improve the model’s accuracy for both individual feature sets and all feature set analyses (see figure \@ref(fig:knnif)). Super objects at coarseness scale of 80 provided the best results for predicting land cover types from high resolution satellite imagery, with an accuracy score of 71.8% in this project. The next best coarseness scale was 60, with just a slightly lower prediction accuracy of 71.6%. For coarseness scales above 80, the accuracy of the model decreases with each incremental increase in coarseness scale. The best KNN model by coarser scale classified asphalt and buildings with the highest precision, 0.83 and 0.82 respectively, and classified cars and soil with the lowest precision, 0.31 and 0.46 respectively. In addition to the above results, when all features were applied the KNN model's prediciton accuracy increased from 54% to 77.7% (see figure \@ref(fig:knnaf)).  
 
-#### Individual Feature Sets
 
 ```{r knnif, echo=FALSE, fig.align="center", fig.cap="KNN individual feature sets (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "100%"}
 knitr::include_graphics("./out/knn_if.png", dpi=NA)
@@ -243,11 +243,10 @@ knitr::include_graphics("./out/knn_if.png", dpi=NA)
 \FloatBarrier
 
 
-#### All Feature Sets
 
 
 
-```{r knnaf, echo=FALSE, fig.align="center", fig.cap="RF all features (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "50%"}
+```{r knnaf, echo=FALSE, fig.align="center", fig.cap="KNN all features (original - transformed). Model Accuracy.", message=FALSE, warning=FALSE, out.width = "50%"}
 knitr::include_graphics("./out/knn_af.png", dpi=NA)
 ```
 
