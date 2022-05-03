@@ -258,7 +258,7 @@ knitr::include_graphics("./out/knn_af.png", dpi=NA)
 
 The Table \@ref(tab:ball), shows the best model for all methods, indicating if the data was transformed (standard scaling) and the image segmentation scale of the corresponding feature set.
 
-accuracy_best_all_methods.csv
+
 
 ```{r ball, echo=FALSE}
 df = read.csv("./out/accuracy_best_all_methods.csv", header=T)
